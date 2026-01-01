@@ -6,6 +6,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     if (!auth) {
         return res.status(401).json({ error: 'Não autorizado' });
     }
-
-    next(); 
+    
+    next();
 };
