@@ -1,16 +1,25 @@
-interface User {
-    id: string;
-    name: string;
-    email?: string;
-}
+import type { User, CreateUserDTO, UpdateUserDTO } from '../types/user.types.js';
 
 //BD em memória
 let users: User[] = [
-    { id: '1', name: 'João Silva', email: 'joao@gmail.com' },
-    { id: '2', name: 'Maria Santos', email: 'maria@gmail.com' }
+    {
+        id: '1',
+        name: 'João Silva',
+        email: 'joao@gmail.com',
+        age: 28,
+        isActive: true,
+        createdAt: new Date('2024-01-15')
+    },
+    {
+        id: '2',
+        name: 'Maria Santos',
+        email: 'maria@gmail.com',
+        age: 32,
+        isActive: true,
+        createdAt: new Date('2024-02-20')
+    }
 ];
 
-//Simula delay do BD
 const simulateDbDelay = (ms: number = 500): Promise<void> => {
     return new Promise((resolve) => setTimeout(resolve, ms));
 };
@@ -25,37 +34,44 @@ export const findUserById = async (id: string): Promise<User | undefined> => {
     return users.find(user => user.id === id);
 };
 
-export const createUserInDb = async (userData: Omit<User, 'id'>): Promise<User> => {
+export const createUserInDb = async (userData: CreateUserDTO): Promise<User> => {
     await simulateDbDelay();
 
     const newUser: User = {
         id: String(users.length + 1),
-        ...userData
+        name: userData.name,
+        email: userData.email ?? undefined,
+        age: userData.age ?? undefined,
+        isActive: true,
+        createdAt: new Date()
     };
 
     users.push(newUser);
     return newUser
 };
 
-export const updateUserInDb = async (id: string, userData: Partial<User>): Promise<User | null> => {
+export const updateUserInDb = async (id: string, userData: UpdateUserDTO): Promise<User | null> => {
     await simulateDbDelay();
 
-    const index = users.findIndex(user => user.id === id);
+    const index: number = users.findIndex(user => user.id === id);
 
     if (index === -1) {
         return null;
     }
 
-    const currentUser = users[index];
+    const currentUser: User | undefined = users[index];
 
     if (!currentUser) {
         return null;
     }
 
     const updatedUser: User = {
-        ...currentUser,
-        ...userData,
-        id: currentUser.id // Garante que o ID não seja sobrescrito
+        id: currentUser.id, // Garante que o ID não seja sobrescrito
+        name: userData.name ?? currentUser.name,
+        email: userData.email !== undefined ? userData.email : currentUser.email,
+        age: userData.age !== undefined ? userData.age : currentUser.age,
+        isActive: userData.isActive ?? currentUser.isActive,
+        createdAt: currentUser.createdAt
     };
 
     users[index] = updatedUser;
@@ -65,7 +81,7 @@ export const updateUserInDb = async (id: string, userData: Partial<User>): Promi
 export const deleteUserFromDb = async (id: string): Promise<boolean> => {
     await simulateDbDelay();
 
-    const initialLength = users.length;
+    const initialLength: number = users.length;
     users = users.filter(user => user.id !== id);
 
     return users.length < initialLength;
