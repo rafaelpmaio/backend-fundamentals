@@ -1,68 +1,50 @@
 import type { User, CreateUserDTO, UpdateUserDTO } from '../types/user.types.js';
+import * as userRepository from '../repositories/user.repository.js';
 
-//BD em memória
-let users: User[] = [
-    {
-        id: '1',
-        name: 'João Silva',
-        email: 'joao@gmail.com',
-        age: 28,
-        isActive: true,
-        createdAt: new Date('2024-01-15')
-    },
-    {
-        id: '2',
-        name: 'Maria Santos',
-        email: 'maria@gmail.com',
-        age: 32,
-        isActive: true,
-        createdAt: new Date('2024-02-20')
-    }
-];
-
-const simulateDbDelay = (ms: number = 500): Promise<void> => {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-};
 
 export const findAllUsers = async (): Promise<User[]> => {
-    await simulateDbDelay();
-    return users;
+    return await userRepository.findAll();
 };
 
 export const findUserById = async (id: string): Promise<User | undefined> => {
-    await simulateDbDelay();
-    return users.find(user => user.id === id);
+    return await userRepository.findById(id);
 };
 
 export const createUserInDb = async (userData: CreateUserDTO): Promise<User> => {
-    await simulateDbDelay();
+
+    if (userData.email) {
+        const existingUser: User | undefined = await userRepository.findByEmail(userData.email);
+
+        if (existingUser) {
+            throw new Error('Email já cadastrado');
+        }
+    }
 
     const newUser: User = {
-        id: String(users.length + 1),
+        id: userRepository.generateNextId(),
         name: userData.name,
         email: userData.email ?? undefined,
         age: userData.age ?? undefined,
         isActive: true,
         createdAt: new Date()
     };
-
-    users.push(newUser);
-    return newUser
+    return await userRepository.save(newUser);
 };
 
 export const updateUserInDb = async (id: string, userData: UpdateUserDTO): Promise<User | null> => {
-    await simulateDbDelay();
 
-    const index: number = users.findIndex(user => user.id === id);
-
-    if (index === -1) {
-        return null;
-    }
-
-    const currentUser: User | undefined = users[index];
+    const currentUser: User | undefined = await userRepository.findById(id);
 
     if (!currentUser) {
         return null;
+    }
+
+    if (userData.email && userData.email !== currentUser.email) {
+        const existingUser: User | undefined = await userRepository.findByEmail(userData.email);
+
+        if (existingUser) {
+            throw new Error('Email já cadastrado');
+        }
     }
 
     const updatedUser: User = {
@@ -74,15 +56,9 @@ export const updateUserInDb = async (id: string, userData: UpdateUserDTO): Promi
         createdAt: currentUser.createdAt
     };
 
-    users[index] = updatedUser;
-    return updatedUser;
+    return await userRepository.update(id, updatedUser);
 };
 
 export const deleteUserFromDb = async (id: string): Promise<boolean> => {
-    await simulateDbDelay();
-
-    const initialLength: number = users.length;
-    users = users.filter(user => user.id !== id);
-
-    return users.length < initialLength;
+    return await userRepository.remove(id);
 };
