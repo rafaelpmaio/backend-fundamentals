@@ -50,6 +50,10 @@ export const createUser = async (
         const newUser: User = await createUserInDb(userData);
         res.status(201).json({ message: 'Usuário Criado', data: newUser });
     } catch (error) {
+        if (error instanceof Error) {
+            res.status(400).json({ error: error.message });
+            return;
+        }
         res.status(500).json({ error: 'Erro ao criar usuário' });
     }
 };
@@ -70,6 +74,10 @@ export const updateUser = async (
         }
         res.status(200).json({ message: `Usuário ${id} atualizado`, data: updatedUser });
     } catch (error) {
+        if (error instanceof Error) {
+            res.status(400).json({ error: error.message })
+            return;
+        }
         res.status(500).json({ error: 'Erro ao atualizar o usuário' })
     }
 };
