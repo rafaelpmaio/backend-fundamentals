@@ -6,15 +6,24 @@
   "type": "module",
   "scripts": {
     "dev": "node --loader ts-node/esm src/server.ts",
+    "dev:cluster": "node --loader ts-node/esm src/server.cluster.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:cluster": "node dist/server.cluster.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop backend-fundamentals",
+    "pm2:restart": "pm2 restart backend-fundamentals",
+    "pm2:logs": "pm2 logs backend-fundamentals",
+    "pm2:monit": "pm2 monit",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "node",
     "express",
     "typescript",
-    "backend"
+    "backend",
+    "cluster",
+    "pm2"
   ],
   "author": "Rafael Maio",
   "license": "ISC",
