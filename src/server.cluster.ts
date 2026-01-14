@@ -1,4 +1,4 @@
-import cluster, { worker } from 'cluster';
+import cluster from 'cluster';
 import os from 'os';
 import app from './app.js';
 
