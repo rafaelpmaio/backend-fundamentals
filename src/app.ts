@@ -5,6 +5,7 @@ import passport from './config/passport.config.js';
 import userRoutes from './routes/user.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import { loggerMiddleware } from './middlewares/logger.middleware.js';
+import { ENV } from './config/env.js';
 
 const app: Application = express();
 
@@ -13,11 +14,11 @@ app.use(express.json());
 
 app.use(
     session({
-        secret: process.env.SESSION_SECRET || 'secret-super-seguro',
+        secret: ENV.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: process.env.NODE_ENV === 'production',
+            secure: ENV.SESSION_SECRET === 'production',
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000 // 24 horas
         }
