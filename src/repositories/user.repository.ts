@@ -6,6 +6,7 @@ let users: User[] = [
         id: '1',
         name: 'João Silva',
         email: 'joao@gmail.com',
+        password: '123123',
         age: 28,
         isActive: true,
         createdAt: new Date('2024-01-15')
@@ -14,6 +15,7 @@ let users: User[] = [
         id: '2',
         name: 'Maria Santos',
         email: 'maria@gmail.com',
+        password: '345345',
         age: 32,
         isActive: true,
         createdAt: new Date('2024-02-20')

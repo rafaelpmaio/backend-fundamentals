@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { User, CreateUserDTO } from '../types/user.types.js';
+import type { User, CreateUserDTO, SafeUser } from '../types/user.types.js';
 import type { ApiResponse, ApiError } from '../types/api.types.js';
 import { registerUser, sanitizeUser } from '../services/auth.service.js';
 import passport from '../config/passport.config.js';
