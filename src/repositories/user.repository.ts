@@ -1,12 +1,15 @@
 import type { User } from '../types/user.types.js';
+import bcrypt from 'bcrypt';
 
-//Banco de dados em memória
+
+// Banco de dados em memória
+const saltRounds: number = 10; // SaltRounds criado para gerar a mesma hash comparada em passport.config.ts 
 let users: User[] = [
     {
         id: '1',
         name: 'João Silva',
         email: 'joao@gmail.com',
-        password: '123123',
+        password: await bcrypt.hash('123123', saltRounds),
         age: 28,
         isActive: true,
         createdAt: new Date('2024-01-15')
@@ -15,7 +18,7 @@ let users: User[] = [
         id: '2',
         name: 'Maria Santos',
         email: 'maria@gmail.com',
-        password: '345345',
+        password: await bcrypt.hash('345345', saltRounds),
         age: 32,
         isActive: true,
         createdAt: new Date('2024-02-20')
