@@ -12,7 +12,7 @@ export type CreateUserDTO = Pick<User, 'name' | 'email' | 'password' | 'age'>;
 
 export type UpdateUserDTO = Pick<User, 'name' | 'email' | 'password' | 'age' | 'isActive'>;
 
-export type SafeUser = Omit<User, 'password'>;
+export type UserResponse = Omit<User, 'password'>;
 
 export interface LoginDTO {
     email: string;
