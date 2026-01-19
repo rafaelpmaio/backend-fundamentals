@@ -61,10 +61,19 @@ export const login = (
 
 // Logout
 export const logout = (req: Request, res: Response, next: NextFunction): void => {
+    // 1. O Passport limpa o usuário da requisição
     req.logout((err) => {
         if (err) {
             return next(err);
         }
+        // 2. O express-session destrói a sessão no banco/Redis
+        req.session.destroy((err) => {
+            if (err) {
+                return next(err);
+            }
+            // 3. Limpa o cookie no navegador do usuário
+            res.clearCookie('connect.sid');
+        })
         res.status(200).json({ message: 'Logout realizado com sucesso' });
     });
 };
