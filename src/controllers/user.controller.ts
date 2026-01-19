@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import type { User, CreateUserDTO, UpdateUserDTO } from '../types/user.types.js';
+import type { User, CreateUserDTO, UpdateUserDTO, UserResponse } from '../types/user.types.js';
 import type { ApiResponse, ApiError } from '../types/api.types.js';
 import {
     findAllUsers,
@@ -9,14 +9,16 @@ import {
     deleteUserFromDb
 } from '../services/user.service.js';
 import { getValidatedId } from '../utils/typeGuards.js';
+import { sanitizeUser } from '../services/auth.service.js';
 
 export const getUsers = async (
     req: Request,
-    res: Response<ApiResponse<User[]> | ApiError>
+    res: Response<ApiResponse<UserResponse[]> | ApiError>
 ): Promise<void> => {
     try {
         const users: User[] = await findAllUsers();
-        res.status(200).json({ message: 'Lista de usuários', data: users });
+        const sanitizedUsers = users.map(user => sanitizeUser(user));
+        res.status(200).json({ message: 'Lista de usuários', data: sanitizedUsers });
     } catch (error) {
         res.status(500).json({ error: 'Erro ao buscar usuários' });
     }
@@ -24,7 +26,7 @@ export const getUsers = async (
 
 export const getUserById = async (
     req: Request,
-    res: Response<ApiResponse<User> | ApiError>
+    res: Response<ApiResponse<UserResponse> | ApiError>
 ): Promise<void> => {
     try {
         const id: string = getValidatedId(req.params);
@@ -35,7 +37,8 @@ export const getUserById = async (
             return;
         }
 
-        res.status(200).json({ message: 'Usuário encontrado', data: user });
+        const sanitezedUser = sanitizeUser(user);
+        res.status(200).json({ message: 'Usuário encontrado', data: sanitezedUser });
     } catch (error) {
         res.status(500).json({ error: 'Erro ao buscar usuário' });
     }
@@ -43,12 +46,13 @@ export const getUserById = async (
 
 export const createUser = async (
     req: Request<{}, {}, CreateUserDTO>,
-    res: Response<ApiResponse<User> | ApiError>
+    res: Response<ApiResponse<UserResponse> | ApiError>
 ): Promise<void> => {
     try {
         const userData: CreateUserDTO = req.body;
         const newUser: User = await createUserInDb(userData);
-        res.status(201).json({ message: 'Usuário Criado', data: newUser });
+        const sanitezedUser = sanitizeUser(newUser);
+        res.status(201).json({ message: 'Usuário Criado', data: sanitezedUser });
     } catch (error) {
         if (error instanceof Error) {
             res.status(400).json({ error: error.message });
@@ -60,7 +64,7 @@ export const createUser = async (
 
 export const updateUser = async (
     req: Request<{ id: string }, {}, UpdateUserDTO>,
-    res: Response<ApiResponse<User> | ApiError>
+    res: Response<ApiResponse<UserResponse> | ApiError>
 ): Promise<void> => {
     try {
         const id: string = getValidatedId(req.params);
@@ -72,7 +76,8 @@ export const updateUser = async (
             res.status(404).json({ error: 'usuário não encontrado' });
             return;
         }
-        res.status(200).json({ message: `Usuário ${id} atualizado`, data: updatedUser });
+        const sanitezedUser = sanitizeUser(updatedUser);
+        res.status(200).json({ message: `Usuário ${id} atualizado`, data: sanitezedUser });
     } catch (error) {
         if (error instanceof Error) {
             res.status(400).json({ error: error.message })

@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { User, CreateUserDTO, SafeUser } from '../types/user.types.js';
+import type { User, CreateUserDTO, UserResponse } from '../types/user.types.js';
 import type { ApiResponse, ApiError } from '../types/api.types.js';
 import { registerUser, sanitizeUser } from '../services/auth.service.js';
 import passport from '../config/passport.config.js';
@@ -7,7 +7,7 @@ import passport from '../config/passport.config.js';
 // Registrar novo usuário
 export const register = async (
     req: Request<{}, {}, CreateUserDTO>,
-    res: Response<ApiResponse<Omit<User, 'password'>> | ApiError>
+    res: Response<ApiResponse<UserResponse> | ApiError>
 ): Promise<void> => {
     try {
         const userData: CreateUserDTO = req.body;
@@ -30,7 +30,7 @@ export const register = async (
 // Login com Passport e LocalStrategy
 export const login = (
     req: Request,
-    res: Response<ApiResponse<Omit<User, 'password'>> | ApiError>,
+    res: Response<ApiResponse<UserResponse> | ApiError>,
     next: NextFunction
 ): void => {
     passport.authenticate('local', (err: Error, user: User | false, info: { message: 'string' }) => {
@@ -81,7 +81,7 @@ export const logout = (req: Request, res: Response, next: NextFunction): void =>
 // Obter perfil do usuário autenticado
 export const getProfile = (
     req: Request,
-    res: Response<ApiResponse<Omit<User, 'password'>> | ApiError>
+    res: Response<ApiResponse<UserResponse> | ApiError>
 ): void => {
     if (!req.user) {
         res.status(401).json({ error: 'Não autenticado' });
