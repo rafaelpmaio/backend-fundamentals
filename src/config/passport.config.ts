@@ -1,9 +1,8 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';;
 import bcrypt from 'bcrypt';
-import * as userRepository from '../repositories/user.repository.js';
+import { userRepository } from '../repositories/user.repository.js';
 import type { User } from '../types/user.types.js';
-import { doesNotMatch } from 'node:assert';
 
 //Configura LocalStrategy
 passport.use(
