@@ -1,5 +1,6 @@
 import type { User, CreateUserDTO, UpdateUserDTO } from '../types/user.types.js';
-import * as userRepository from '../repositories/user.repository.js';
+import { userRepository } from '../repositories/user.repository.js';
+import { randomUUID } from 'crypto';
 
 
 export const findAllUsers = async (): Promise<User[]> => {
@@ -21,7 +22,7 @@ export const createUserInDb = async (userData: CreateUserDTO): Promise<User> => 
     }
 
     const newUser: User = {
-        id: userRepository.generateNextId(),
+        id: randomUUID(),
         name: userData.name,
         email: userData.email ?? undefined,
         age: userData.age ?? undefined,
