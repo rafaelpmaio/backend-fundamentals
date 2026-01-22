@@ -1,20 +1,20 @@
 import { Router } from 'express';
-import { register, login, logout, getProfile } from '../controllers/auth.controller.js';
+import { authController } from '../controllers/auth.controller.js';
 import { isAuthenticated } from '../middlewares/passport.middleware.js';
 import { validateRegisterBody, validateLoginBody } from '../middlewares/validation.middleware.js';
 
 const router = Router();
 
 // Registrar novo usuário
-router.post('/register', validateRegisterBody, register);
+router.post('/register', validateRegisterBody, authController.register);
 
 // Login
-router.post('/login', validateLoginBody, login);
+router.post('/login', validateLoginBody, authController.login);
 
 // Logout (rota protegida)
-router.post('/logout', isAuthenticated, logout);
+router.post('/logout', isAuthenticated, authController.logout);
 
 // Obter perfil (rota protegida)
-router.get('/profile', isAuthenticated, getProfile);
+router.get('/profile', isAuthenticated, authController.getProfile);
 
 export default router;
