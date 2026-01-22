@@ -95,7 +95,7 @@ export class UserController implements IUserController {
             res.status(500).json({ error: 'Erro ao atualizar o usuário' })
         }
     };
-    
+
     async deleteUser(
         req: Request,
         res: Response<ApiResponse<undefined> | ApiError>
@@ -116,7 +116,11 @@ export class UserController implements IUserController {
     };
 }
 
+export const createUserController = (): UserController => {
+    return new UserController();
+}
 
+export const userController = createUserController();
 
 
 
