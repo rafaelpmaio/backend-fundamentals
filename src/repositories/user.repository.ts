@@ -1,6 +1,5 @@
 import type { User } from '../types/user.types.js';
 import bcrypt from 'bcrypt';
-import { randomUUID } from 'crypto';
 
 export interface IUserRepository {
     findAll(): Promise<User[]>;
@@ -57,12 +56,6 @@ export class UserRepository implements IUserRepository {
 
     async save(user: User): Promise<User> {
         await simulateDbDelay();
-
-        const newUser = {
-            ...user,
-            id: randomUUID()
-        };
-
         users.push(user);
         return user;
     };
