@@ -1,17 +1,18 @@
 import type { User } from '../types/user.types.js';
 import bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 
 export interface IUserRepository {
     findAll(): Promise<User[]>;
     findById(id: string): Promise<User | undefined>;
     findByEmail(email: string): Promise<User | undefined>;
-    save(user: User): Promise<User>;
+    save(user: Omit<User, 'id'>): Promise<User>;
     update(id: string, updatedUser: User): Promise<User | null>;
     remove(id: string): Promise<boolean>;
 }
 
-// Banco de dados em memória
 const saltRounds: number = 10; // SaltRounds criado para gerar a mesma hash comparada em passport.config.ts 
+// Banco de dados em memória
 let users: User[] = [
     {
         id: '1',
@@ -56,8 +57,14 @@ export class UserRepository implements IUserRepository {
 
     async save(user: User): Promise<User> {
         await simulateDbDelay();
-        users.push(user);
-        return user;
+
+        const newUser = {
+            ...user,
+            id: randomUUID()
+        };
+
+        users.push(newUser);
+        return newUser;
     };
 
     async update(id: string, updatedUser: User): Promise<User | null> {
@@ -80,6 +87,10 @@ export class UserRepository implements IUserRepository {
         return users.length < initialLength;
     };
 }
+// Simula delay de operação no banco de dados
+const simulateDbDelay = (ms: number = 500): Promise<void> => {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+};
 
 export const createUserRepository = (): IUserRepository => {
     return new UserRepository(users);
@@ -87,7 +98,3 @@ export const createUserRepository = (): IUserRepository => {
 
 export const userRepository = createUserRepository();
 
-// Simula delay de operação no banco de dados
-const simulateDbDelay = (ms: number = 500): Promise<void> => {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-};

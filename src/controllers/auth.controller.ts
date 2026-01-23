@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { User, CreateUserDTO, UserResponse } from '../types/user.types.js';
 import type { ApiResponse, ApiError } from '../types/api.types.js';
-import { registerUser, sanitizeUser } from '../services/auth.service.js';
+import { authService } from '../services/auth.service.js';
 import passport from '../config/passport.config.js';
+import { } from '../services/token.service.js';
 
 
 export interface IAuthController {
@@ -20,8 +21,8 @@ export class AuthController implements IAuthController {
     ): Promise<void> {
         try {
             const userData: CreateUserDTO = req.body;
-            const newUser: User = await registerUser(userData);
-            const userWithoutPassword = sanitizeUser(newUser);
+            const newUser: User = await authService.registerUser(userData);
+            const userWithoutPassword = authService.sanitizeUser(newUser);
 
             res.status(201).json({
                 message: 'Usuário registrado com sucesso',
@@ -59,7 +60,7 @@ export class AuthController implements IAuthController {
                     return;
                 }
 
-                const userWithoutPassword = sanitizeUser(user);
+                const userWithoutPassword = authService.sanitizeUser(user);
                 res.status(200).json({
                     message: 'Login realizado com sucesso',
                     data: userWithoutPassword
@@ -98,7 +99,7 @@ export class AuthController implements IAuthController {
         }
 
         const user = req.user as User;
-        const userWithoutPassword = sanitizeUser(user);
+        const userWithoutPassword = authService.sanitizeUser(user);
 
         res.status(200).json({
             message: 'Perfil do usuário',

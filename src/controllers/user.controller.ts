@@ -1,15 +1,9 @@
 import type { Request, Response } from "express";
 import type { User, CreateUserDTO, UpdateUserDTO, UserResponse } from '../types/user.types.js';
 import type { ApiResponse, ApiError } from '../types/api.types.js';
-import {
-    findAllUsers,
-    findUserById,
-    createUserInDb,
-    updateUserInDb,
-    deleteUserFromDb
-} from '../services/user.service.js';
+import { userService } from '../services/user.service.js';
 import { getValidatedId } from '../utils/typeGuards.js';
-import { sanitizeUser } from '../services/auth.service.js';
+import { authService } from '../services/auth.service.js';
 
 export interface IUserController {
     getUsers(req: Request, res: Response): Promise<void>;
@@ -25,8 +19,8 @@ export class UserController implements IUserController {
         res: Response<ApiResponse<UserResponse[]> | ApiError>
     ): Promise<void> {
         try {
-            const users: User[] = await findAllUsers();
-            const sanitizedUsers = users.map(user => sanitizeUser(user));
+            const users: User[] = await userService.findAllUsers();
+            const sanitizedUsers = users.map(user => authService.sanitizeUser(user));
             res.status(200).json({ message: 'Lista de usuários', data: sanitizedUsers });
         } catch (error) {
             res.status(500).json({ error: 'Erro ao buscar usuários' });
@@ -39,14 +33,14 @@ export class UserController implements IUserController {
     ): Promise<void> {
         try {
             const id: string = getValidatedId(req.params);
-            const user: User | undefined = await findUserById(id);
+            const user: User | undefined = await userService.findUserById(id);
 
             if (!user) {
                 res.status(404).json({ error: 'Usuário não encontrado' });
                 return;
             }
 
-            const sanitezedUser = sanitizeUser(user);
+            const sanitezedUser = authService.sanitizeUser(user);
             res.status(200).json({ message: 'Usuário encontrado', data: sanitezedUser });
         } catch (error) {
             res.status(500).json({ error: 'Erro ao buscar usuário' });
@@ -59,8 +53,8 @@ export class UserController implements IUserController {
     ): Promise<void> {
         try {
             const userData: CreateUserDTO = req.body;
-            const newUser: User = await createUserInDb(userData);
-            const sanitezedUser = sanitizeUser(newUser);
+            const newUser: User = await userService.createUserInDb(userData);
+            const sanitezedUser = authService.sanitizeUser(newUser);
             res.status(201).json({ message: 'Usuário Criado', data: sanitezedUser });
         } catch (error) {
             if (error instanceof Error) {
@@ -79,13 +73,13 @@ export class UserController implements IUserController {
             const id: string = getValidatedId(req.params);
             const userData: UpdateUserDTO = req.body;
 
-            const updatedUser: User | null = await updateUserInDb(id, userData);
+            const updatedUser: User | null = await userService.updateUserInDb(id, userData);
 
             if (!updatedUser) {
                 res.status(404).json({ error: 'usuário não encontrado' });
                 return;
             }
-            const sanitezedUser = sanitizeUser(updatedUser);
+            const sanitezedUser = authService.sanitizeUser(updatedUser);
             res.status(200).json({ message: `Usuário ${id} atualizado`, data: sanitezedUser });
         } catch (error) {
             if (error instanceof Error) {
@@ -102,7 +96,7 @@ export class UserController implements IUserController {
     ): Promise<void> {
         try {
             const id: string = getValidatedId(req.params);
-            const deleted: boolean = await deleteUserFromDb(id);
+            const deleted: boolean = await userService.deleteUserFromDb(id);
 
             if (!deleted) {
                 res.status(400).json({ error: 'Usuário não encontrado' });

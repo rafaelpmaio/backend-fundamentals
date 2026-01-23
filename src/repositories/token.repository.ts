@@ -6,7 +6,7 @@ import type { RefreshTokenDocument } from '../types/token.types.js';
  */
 
 export interface ITokenRepository {
-    create(tokenData: RefreshTokenDocument): Promise<RefreshTokenDocument>;
+    create(tokenData: Omit<RefreshTokenDocument, 'id' | 'createdAt'>): Promise<RefreshTokenDocument>;
     findByToken(token: string): Promise<RefreshTokenDocument | null>;
     findByUserId(userId: string): Promise<RefreshTokenDocument[]>;
     revoke(tokenId: string): Promise<boolean>;

@@ -3,7 +3,19 @@ import { jwtConfig } from '../config/jwt.config.js';
 import type { TokenPayLoad, TokenPair, DecodedToken } from '../types/token.types.js';
 import { tokenRepository } from '../repositories/token.repository.js';
 
-class TokenService {
+export interface ITokenService {
+    generateTokenPair(userId: string, email: string, deviceInfo?: string, ipAddess?: string): Promise<TokenPair>;
+    generateAccessToken(userId: string, email: string): string;
+    generateRefreshToken(userId: string, email: string): string;
+    verifyAccessToken(token: string): DecodedToken;
+    verifyRefreshToken(token: string): Promise<DecodedToken>;
+    refreshAccessToken(refreshToken: string): Promise<TokenPair>;
+    revokeToken(token: string): Promise<boolean>;
+    revokeAllUserTokens(userId: string): Promise<number>;
+    cleanupExpiredTokens(): Promise<number>;
+}
+
+class TokenService implements ITokenService {
     async generateTokenPair(userId: string, email: string, deviceInfo?: string, ipAddess?: string): Promise<TokenPair> {
         const accessToken = this.generateAccessToken(userId, email);
         const refreshToken = this.generateRefreshToken(userId, email);
@@ -17,7 +29,7 @@ class TokenService {
             expiresAt,
             isRevoked: false,
             deviceInfo,
-            ipAddess
+            ipAddess,
         });
 
         return { accessToken, refreshToken };
@@ -114,6 +126,10 @@ class TokenService {
     }
 }
 
-export const tokenService = new TokenService();
+export const createTokenService = (): ITokenService => {
+    return new TokenService();
+}
+
+export const tokenService = createTokenService();
 
 
