@@ -1,8 +1,8 @@
 export interface User {
     id: string;
     name: string;
-    email?: string | undefined;
-    password?: string | undefined;
+    email: string;
+    password: string ;
     age?: number | undefined;
     isActive: boolean;
     createdAt: Date;
