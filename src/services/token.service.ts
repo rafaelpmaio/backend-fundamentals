@@ -17,22 +17,32 @@ export interface ITokenService {
 
 class TokenService implements ITokenService {
     async generateTokenPair(userId: string, email: string, deviceInfo?: string, ipAddess?: string): Promise<TokenPair> {
-        const accessToken = this.generateAccessToken(userId, email);
-        const refreshToken = this.generateRefreshToken(userId, email);
 
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7)
+        if (!userId) {
+            throw new Error('User ID inválido');
+        }
 
-        await tokenRepository.create({
-            userId,
-            token: refreshToken,
-            expiresAt,
-            isRevoked: false,
-            deviceInfo,
-            ipAddess,
-        });
+        try {
 
-        return { accessToken, refreshToken };
+            const accessToken = this.generateAccessToken(userId, email);
+            const refreshToken = this.generateRefreshToken(userId, email);
+
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 7)
+
+            await tokenRepository.create({
+                userId,
+                token: refreshToken,
+                expiresAt,
+                isRevoked: false,
+                deviceInfo,
+                ipAddess,
+            });
+
+            return { accessToken, refreshToken };
+        } catch (err) {
+            throw new Error('Falha ao gerar Token Pair');
+        }
     }
 
     generateAccessToken(userId: string, email: string): string {
@@ -108,9 +118,9 @@ class TokenService implements ITokenService {
         }
     }
     async refreshAccessToken(refreshToken: string): Promise<TokenPair> {
-        const decoded = await this.verifyRefreshToken(refreshToken);
+        const decodedToken = await this.verifyRefreshToken(refreshToken);
         await tokenRepository.revokeByToken(refreshToken);
-        return this.generateTokenPair(decoded.userId, decoded.email);
+        return this.generateTokenPair(decodedToken.userId, decodedToken.email);
     }
 
     async revokeToken(token: string): Promise<boolean> {
