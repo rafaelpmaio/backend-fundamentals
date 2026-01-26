@@ -3,13 +3,16 @@ import type { User, CreateUserDTO, UserResponse } from '../types/user.types.js';
 import type { ApiResponse, ApiError } from '../types/api.types.js';
 import { authService } from '../services/auth.service.js';
 import passport from '../config/passport.config.js';
-import { } from '../services/token.service.js';
+import { tokenService } from '../services/token.service.js';
+import type { AuthResponse } from '../types/auth.types.js';
 
 
 export interface IAuthController {
     register(req: Request, res: Response): Promise<void>;
     login(req: Request, res: Response, next: NextFunction): void;
-    logout(req: Request, res: Response, next: NextFunction): void;
+    logout(req: Request, res: Response, next: NextFunction): Promise<void>;
+    logoutAll(req: Request, res: Response): Promise<void>;
+    refreshToken(req: Request, res: Response): Promise<void>;
     getProfile(req: Request, res: Response): void;
 }
 
@@ -22,11 +25,11 @@ export class AuthController implements IAuthController {
         try {
             const userData: CreateUserDTO = req.body;
             const newUser: User = await authService.registerUser(userData);
-            const userWithoutPassword = authService.sanitizeUser(newUser);
+            const sanitizedUser = authService.sanitizeUser(newUser);
 
             res.status(201).json({
                 message: 'Usuário registrado com sucesso',
-                data: userWithoutPassword
+                data: sanitizedUser
             });
         } catch (error) {
             if (error instanceof Error) {
@@ -35,58 +38,72 @@ export class AuthController implements IAuthController {
             }
             res.status(500).json({ error: 'Erro ao registrar usuário' });
         }
-    };
+    }
 
-    // Login com Passport e LocalStrategy
+    // Login com Passport e Jwt
     login(
         req: Request,
-        res: Response<ApiResponse<UserResponse> | ApiError>,
+        res: Response<ApiResponse<AuthResponse> | ApiError>,
         next: NextFunction
     ): void {
-        passport.authenticate('local', (err: Error, user: User | false, info: { message: 'string' }) => {
-            if (err) {
-                res.status(500).json({ error: 'Erro no servidor' });
-                return;
-            }
-
-            if (!user) {
-                res.status(401).json({ error: info.message || 'Credenciais inválidas' });
-                return;
-            }
-
-            req.logIn(user, (err) => {
+        passport.authenticate(
+            'local',
+            async (err: Error, user: User | false, info: { message: 'string' }) => {
                 if (err) {
-                    res.status(500).json({ error: 'Erro ao criar sessão' });
+                    res.status(500).json({ error: 'Erro no servidor' });
                     return;
                 }
 
-                const userWithoutPassword = authService.sanitizeUser(user);
+                if (!user) {
+                    res.status(401).json({ error: info.message || 'Credenciais inválidas' });
+                    return;
+                }
+
+                const tokens = await tokenService.generateTokenPair(
+                    user.id,
+                    user.email,
+                    req.headers['user-agent'],
+                    req.ip);
+
+                const sanitizedUser = authService.sanitizeUser(user);
+
                 res.status(200).json({
                     message: 'Login realizado com sucesso',
-                    data: userWithoutPassword
-                });
-            });
-        })(req, res, next);
-    };
+                    data: {
+                        user: sanitizedUser,
+                        tokens: {
+                            accessToken: tokens.accessToken,
+                            refreshToken: tokens.refreshToken
+                        }
+                    },
+                })
 
-    // Logout Passport e LocalStrategy
-    logout(req: Request, res: Response, next: NextFunction): void {
-        // 1. O Passport limpa o usuário da requisição
-        req.logout((err) => {
-            if (err) {
-                return next(err);
-            }
-            // 2. O express-session destrói a sessão no banco/Redis
-            req.session.destroy((err) => {
-                if (err) {
-                    return next(err);
-                }
-                // 3. Limpa o cookie no navegador do usuário
-                res.clearCookie('connect.sid');
-            })
-            res.status(200).json({ message: 'Logout realizado com sucesso' });
+            })(req, res, next);
+    }
+
+    async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const { refreshToken } = req.body;
+        await tokenService.revokeToken(refreshToken);
+        res.json({ success: true, message: 'Logout realizado com sucesso' });
+    }
+
+    async logoutAll(req: Request, res: Response): Promise<void> {
+        if (!req.tokenData) {
+            res.status(401).json({ message: 'Não autenticado' });
+            return;
+        }
+        const count = await tokenService.revokeAllUserTokens(req.tokenData.userId);
+        res.json({ success: true, message: `${count} tokens encerrados` });
+    }
+
+    async refreshToken(req: Request, res: Response): Promise<void> {
+        const { refreshToken } = req.body;
+        const tokens = await tokenService.refreshAccessToken(refreshToken);
+        res.json({
+            success: true,
+            data: tokens
         });
-    };
+    }
 
     // Obter perfil do usuário autenticado
     getProfile(
