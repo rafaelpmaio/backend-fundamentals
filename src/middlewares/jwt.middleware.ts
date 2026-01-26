@@ -28,8 +28,8 @@ export const authenticateToken = async (
             return;
         }
 
-        const decoded = tokenService.verifyAccessToken(token);
-        req.tokenData = decoded;
+        const decodedToken = tokenService.verifyAccessToken(token);
+        req.tokenData = decodedToken;
 
         next();
     } catch (error) {
