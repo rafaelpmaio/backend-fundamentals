@@ -6,20 +6,29 @@ import { getValidatedId } from '../utils/typeGuards.js';
 import { authService } from '../services/auth.service.js';
 
 export interface IUserController {
-    getUsers(req: Request, res: Response): Promise<void>;
-    getUserById(req: Request, res: Response): Promise<void>;
-    createUser(req: Request, res: Response): Promise<void>;
-    updateUser(req: Request, res: Response): Promise<void>;
-    deleteUser(req: Request, res: Response): Promise<void>;
+    getMe(req: Request, res: Response): Promise<void>;
+    getAll(req: Request, res: Response): Promise<void>;
+    getById(req: Request, res: Response): Promise<void>;
+    create(req: Request, res: Response): Promise<void>;
+    update(req: Request, res: Response): Promise<void>;
+    delete(req: Request, res: Response): Promise<void>;
 }
 
 export class UserController implements IUserController {
-    async getUsers(
+    async getMe(req: Request, res: Response): Promise<void> {
+        if (!req.tokenData) {
+            res.status(401).json('Não autenticado' )
+            return;
+        }
+        const user = await userService.findById(req.tokenData?.userId);
+        res.status(200).json({ sucess: true, data: user });
+    }
+    async getAll(
         req: Request,
         res: Response<ApiResponse<UserResponse[]> | ApiError>
     ): Promise<void> {
         try {
-            const users: User[] = await userService.findAllUsers();
+            const users: User[] = await userService.findAll();
             const sanitizedUsers = users.map(user => authService.sanitizeUser(user));
             res.status(200).json({ message: 'Lista de usuários', data: sanitizedUsers });
         } catch (error) {
@@ -27,13 +36,13 @@ export class UserController implements IUserController {
         }
     };
 
-    async getUserById(
+    async getById(
         req: Request,
         res: Response<ApiResponse<UserResponse> | ApiError>
     ): Promise<void> {
         try {
             const id: string = getValidatedId(req.params);
-            const user: User | undefined = await userService.findUserById(id);
+            const user: User | undefined = await userService.findById(id);
 
             if (!user) {
                 res.status(404).json({ error: 'Usuário não encontrado' });
@@ -47,7 +56,7 @@ export class UserController implements IUserController {
         }
     };
 
-    async createUser(
+    async create(
         req: Request<{}, {}, CreateUserDTO>,
         res: Response<ApiResponse<UserResponse> | ApiError>
     ): Promise<void> {
@@ -65,7 +74,7 @@ export class UserController implements IUserController {
         }
     };
 
-    async updateUser(
+    async update(
         req: Request<{ id: string }, {}, UpdateUserDTO>,
         res: Response<ApiResponse<UserResponse> | ApiError>
     ): Promise<void> {
@@ -90,7 +99,7 @@ export class UserController implements IUserController {
         }
     };
 
-    async deleteUser(
+    async delete(
         req: Request,
         res: Response<ApiResponse<undefined> | ApiError>
     ): Promise<void> {
