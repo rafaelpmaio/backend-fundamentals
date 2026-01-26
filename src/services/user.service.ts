@@ -3,8 +3,8 @@ import { userRepository } from '../repositories/user.repository.js';
 
 
 export interface IUserService {
-    findAllUsers(): Promise<User[]>;
-    findUserById(id: string): Promise<User | undefined>;
+    findAll(): Promise<User[]>;
+    findById(id: string): Promise<User | undefined>;
     createUserInDb(userData: CreateUserDTO): Promise<User>;
     updateUserInDb(id: string, userData: UpdateUserDTO): Promise<User | null>;
     deleteUserFromDb(id: string): Promise<boolean>;
@@ -12,11 +12,11 @@ export interface IUserService {
 
 export class UserService implements IUserService {
 
-    async findAllUsers(): Promise<User[]> {
+    async findAll(): Promise<User[]> {
         return await userRepository.findAll();
     };
 
-    async findUserById(id: string): Promise<User | undefined> {
+    async findById(id: string): Promise<User | undefined> {
         return await userRepository.findById(id);
     };
 
@@ -33,6 +33,7 @@ export class UserService implements IUserService {
         return await userRepository.save({
             name: userData.name,
             email: userData.email ?? undefined,
+            password: userData.password,
             age: userData.age ?? undefined,
             isActive: true,
             createdAt: new Date()
@@ -59,6 +60,7 @@ export class UserService implements IUserService {
             id: currentUser.id, // Garante que o ID não seja sobrescrito
             name: userData.name ?? currentUser.name,
             email: userData.email !== undefined ? userData.email : currentUser.email,
+            password: userData.password,
             age: userData.age !== undefined ? userData.age : currentUser.age,
             isActive: userData.isActive ?? currentUser.isActive,
             createdAt: currentUser.createdAt
