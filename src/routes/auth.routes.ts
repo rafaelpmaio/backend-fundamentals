@@ -1,20 +1,20 @@
 import { Router } from 'express';
 import { authController } from '../controllers/auth.controller.js';
-import { isAuthenticated } from '../middlewares/passport.middleware.js';
 import { validateRegisterBody, validateLoginBody } from '../middlewares/validation.middleware.js';
+import { authRateLimiter, registerRateLimiter } from '../middlewares/rateLimit.middleware.js';
+import { authenticateToken } from '../middlewares/jwt.middleware.js';
 
 const router = Router();
 
-// Registrar novo usuário
-router.post('/register', validateRegisterBody, authController.register);
+// Registrar novo usuário utilizando políticas de nº de tentativas válidas (RateLimiter)
+router.post('/register', registerRateLimiter, validateRegisterBody, authController.register);
+router.post('/login', authRateLimiter, validateLoginBody, authController.login);
 
-// Login
-router.post('/login', validateLoginBody, authController.login);
-
-// Logout (rota protegida)
-router.post('/logout', isAuthenticated, authController.logout);
+router.post('/refresh', authController.refreshToken);
+router.post('/logout', authController.logout);
+router.post('/logout-all', authenticateToken, authController.logoutAll);
 
 // Obter perfil (rota protegida)
-router.get('/profile', isAuthenticated, authController.getProfile);
+router.get('/profile',  authController.getProfile);
 
 export default router;
